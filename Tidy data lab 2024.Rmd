@@ -2,7 +2,9 @@
 title: "Laboratorio de Tidy Data"
 author: "Tepi"
 date: "9/28/2024"
-output: md_document
+output: 
+  md_document:
+    variant: markdown
 ---
 
 
@@ -17,6 +19,8 @@ library(tidyverse)
 library(tidyr)
 library(dplyr)
 library(stringr)
+library(knitr)
+
 ```
 
 
@@ -66,7 +70,6 @@ Este dataset es de la World Health Organization y cuenta los casos de Tuberculos
 ```{r, echo=TRUE,cache=TRUE}
 raw<-read.csv("raw.csv")
 head(raw)
-
 ```
 
 # Laboratorio
@@ -77,14 +80,13 @@ Transformar el dataset a formato Tidy.
 
 Primer paso: Bajar las columnas que tienen variables a filas.
 
-```{r,echo=TRUE,cache=TRUE, eval=FALSE}
+```{r, echo=TRUE, eval=TRUE}
 raw_longer <- raw %>%
   pivot_longer(cols = starts_with(c('m', 'f')), 
                names_to = "column", 
                values_to = "cases")
 
-head(raw_longer)
-
+kable(head(raw_longer), format = "markdown")
 
 ```
 
@@ -92,14 +94,15 @@ Segundo paso: Separar las variables que estan en la misma columna extrayendo la 
 
 Sugerencia, utilizar la funcion ```str_sub()``` del paquete **stringr**
 
-```{r, echo=TRUE, cache=TRUE, eval=FALSE}
+```{r, echo=TRUE, eval=TRUE}
 raw_longer$sex <- str_sub(raw_longer$column, start = 1, end = 1)
-head(raw_longer)
+kable(head(raw_longer), format = "markdown")
+
 ```
 
 Tercer paso: Extraer y formatear la variable de edad.
 
-```{r, echo=TRUE, cache=TRUE, eval=FALSE}
+```{r, echo=TRUE, eval=TRUE}
 raw_longer <- raw_longer %>%
   mutate(age = factor(recode(str_sub(raw_longer$column, start = 2), 
                              "014" = "0-14", 
@@ -111,7 +114,7 @@ raw_longer <- raw_longer %>%
                              "65" = "65+"),
                       levels = c("0-14", "15-24", "25-34", "35-44", 
                                  "45-54", "55-64", "65+")))
-head(raw_longer)
+kable(head(raw_longer), format = "markdown")
 
 
 ```

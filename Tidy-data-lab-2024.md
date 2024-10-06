@@ -5,21 +5,24 @@
 2.  Aprender a utilizar la funcion `melt`. y la función `gather()` y las
     funciones `pivot` de `dplyr`.
 
-<!-- -->
+``` r
+library(tidyverse)
+library(tidyr)
+library(dplyr)
+library(stringr)
+library(knitr)
+```
 
-    library(tidyverse)
-    library(tidyr)
-    library(dplyr)
-    library(stringr)
-
-\###pivot\_longer
+###pivot_longer
 
 ## Ejemplos:
 
 Generaremos el dataset teórico que vimos en la presentación de la clase.
 
-    df <- data.frame(row = LETTERS[1:3], a = 1:3, b = 4:6, c = 7:9)
-    df
+``` r
+df <- data.frame(row = LETTERS[1:3], a = 1:3, b = 4:6, c = 7:9)
+df
+```
 
     ##   row a b c
     ## 1   A 1 4 7
@@ -34,8 +37,10 @@ transformar, el nombre que va a tener esas columnas, y los valores.
 Primer ejemplo: Usando pivot longer definiendo las columnas que no
 queremos transformar.
 
-    df %>% 
-      pivot_longer(cols = !row, names_to = "letters", values_to = "vals")
+``` r
+df %>% 
+  pivot_longer(cols = !row, names_to = "letters", values_to = "vals")
+```
 
     ## # A tibble: 9 × 3
     ##   row   letters  vals
@@ -53,8 +58,10 @@ queremos transformar.
 Segundo ejemplo: Usando pivot longer definiendo las columnas que
 queremos transformar.
 
-    df %>% 
-      pivot_longer( cols = c(a,b,c), names_to = "letters", values_to = "vals")
+``` r
+df %>% 
+  pivot_longer( cols = c(a,b,c), names_to = "letters", values_to = "vals")
+```
 
     ## # A tibble: 9 × 3
     ##   row   letters  vals
@@ -77,8 +84,10 @@ Este dataset es de la World Health Organization y cuenta los casos de
 Tuberculosis en varios paises. m es masculino, f es femenino y los
 numeros son el rango de edad en el que se encuentra la persona.
 
-    raw<-read.csv("raw.csv")
-    head(raw)
+``` r
+raw<-read.csv("raw.csv")
+head(raw)
+```
 
     ##     X country year m014 m1524 m2534 m3544 m4554 m5564 m65 mu f014 f1524 f2534
     ## 1  11      AD 2000    0     0     1     0     0     0   0 NA   NA    NA    NA
@@ -101,32 +110,65 @@ Transformar el dataset a formato Tidy.
 
 Primer paso: Bajar las columnas que tienen variables a filas.
 
-    raw_longer <- raw %>%
-      pivot_longer(cols = starts_with(c('m', 'f')), 
-                   names_to = "column", 
-                   values_to = "cases")
+``` r
+raw_longer <- raw %>%
+  pivot_longer(cols = starts_with(c('m', 'f')), 
+               names_to = "column", 
+               values_to = "cases")
 
-    head(raw_longer)
+kable(head(raw_longer), format = "markdown")
+```
+
+     X country     year column     cases
+  ---- --------- ------ -------- -------
+    11 AD          2000 m014           0
+    11 AD          2000 m1524          0
+    11 AD          2000 m2534          1
+    11 AD          2000 m3544          0
+    11 AD          2000 m4554          0
+    11 AD          2000 m5564          0
 
 Segundo paso: Separar las variables que estan en la misma columna
 extrayendo la variable de sexo (m,f).
 
 Sugerencia, utilizar la funcion `str_sub()` del paquete **stringr**
 
-    raw_longer$sex <- str_sub(raw_longer$column, start = 1, end = 1)
-    head(raw_longer)
+``` r
+raw_longer$sex <- str_sub(raw_longer$column, start = 1, end = 1)
+kable(head(raw_longer), format = "markdown")
+```
+
+     X country     year column     cases sex
+  ---- --------- ------ -------- ------- -----
+    11 AD          2000 m014           0 m
+    11 AD          2000 m1524          0 m
+    11 AD          2000 m2534          1 m
+    11 AD          2000 m3544          0 m
+    11 AD          2000 m4554          0 m
+    11 AD          2000 m5564          0 m
 
 Tercer paso: Extraer y formatear la variable de edad.
 
-    raw_longer <- raw_longer %>%
-      mutate(age = factor(recode(str_sub(raw_longer$column, start = 2), 
-                                 "014" = "0-14", 
-                                 "1524" = "15-24", 
-                                 "2534" = "25-34", 
-                                 "3544" = "35-44", 
-                                 "4554" = "45-54", 
-                                 "5564" = "55-64", 
-                                 "65" = "65+"),
-                          levels = c("0-14", "15-24", "25-34", "35-44", 
-                                     "45-54", "55-64", "65+")))
-    head(raw_longer)
+``` r
+raw_longer <- raw_longer %>%
+  mutate(age = factor(recode(str_sub(raw_longer$column, start = 2), 
+                             "014" = "0-14", 
+                             "1524" = "15-24", 
+                             "2534" = "25-34", 
+                             "3544" = "35-44", 
+                             "4554" = "45-54", 
+                             "5564" = "55-64", 
+                             "65" = "65+"),
+                      levels = c("0-14", "15-24", "25-34", "35-44", 
+                                 "45-54", "55-64", "65+")))
+kable(head(raw_longer), format = "markdown")
+```
+
+     X country     year column     cases sex   age
+  ---- --------- ------ -------- ------- ----- -------
+    11 AD          2000 m014           0 m     0-14
+    11 AD          2000 m1524          0 m     15-24
+    11 AD          2000 m2534          1 m     25-34
+    11 AD          2000 m3544          0 m     35-44
+    11 AD          2000 m4554          0 m     45-54
+    11 AD          2000 m5564          0 m     55-64
